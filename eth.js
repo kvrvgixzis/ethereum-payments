@@ -23,32 +23,41 @@ class EthCommerce {
   }
 
   render(options, errorCallback, successCallback) {
-    const { targetElement } = options;
+    const { targetElementId } = options;
 
+    const targetElement = document.getElementById(options.targetElementId);
+
+    if (!targetElement) {
+      console.error('Target element id is not defined');
+      return;
+    }
+
+    this.targetElement = targetElement;
+    this.options = options;
     this.errorCallback = errorCallback;
     this.successCallback = successCallback;
 
     window.addEventListener('load', () => {
-      if (typeof web3 !== 'undefined') return this.renderButton({ ...options });
-      if (this.config.HANDLE_UI) this.renderNoWeb3(targetElement);
+      if (typeof web3 !== 'undefined') return this.renderButton();
+      if (this.config.HANDLE_UI) this.renderNoWeb3();
       this.errorCallback({ error: 'no web3 detected' });
     });
   }
 
-  renderNoWeb3(targetElement) {
+  renderNoWeb3() {
     this.renderStyles();
 
-    const wrapper = document.createElement('div');
-    wrapper.classList.add('eth-web3-missing-wrapper');
+    const downloadBtn = document.createElement('a');
+    downloadBtn.href = 'https://metamask.io/download.html';
+    downloadBtn.classList.add('eth-btn');
 
-    const message = document.createElement('p');
-    message.classList.add('eth-web3-missing');
-    message.innerHTML =
-      'Install <a target="_blank" href="https://metamask.io/download.html">metamask.io</a>';
+    const btnText = document.createElement('span');
+    btnText.id = 'eth-btn-text';
+    btnText.textContent = 'Install metamask';
 
-    wrapper.appendChild(message);
+    downloadBtn.append(btnText);
 
-    document.getElementById(targetElement).appendChild(wrapper);
+    this.targetElement.appendChild(downloadBtn);
   }
 
   async getEtherPriceIn(currency) {
@@ -58,125 +67,122 @@ class EthCommerce {
     return data[currency];
   }
 
-  renderButton(options) {
+  renderButton() {
     this.renderStyles();
 
-    const { targetElement, amount, address, currency } = options;
+    const { amount, address, currency } = this.options;
 
-    const a = document.createElement('a');
-    a.classList.add('eth-btn');
+    const payBtn = document.createElement('a');
+    payBtn.classList.add('eth-btn');
 
     if (this.config.HANDLE_UI) {
       const iconWrapper = document.createElement('span');
       iconWrapper.classList.add('eth-icon-wrapper');
 
-      const img = document.createElement('img');
-      img.src = this.getImage('ETHEREUM_ICON');
-      img.id = 'eth-icon-svg';
-      iconWrapper.appendChild(img);
-      a.appendChild(iconWrapper);
+      const icon = document.createElement('img');
+      icon.src = this.getImage('ETHEREUM_ICON');
+      icon.id = 'eth-icon-svg';
+      iconWrapper.appendChild(icon);
+
+      payBtn.appendChild(iconWrapper);
     }
 
-    const span = document.createElement('span');
-    span.id = 'eth-btn-text';
-    span.textContent = 'Pay with Ethereum';
+    const btnText = document.createElement('span');
+    btnText.id = 'eth-btn-text';
+    btnText.textContent = 'Pay with Ethereum';
 
-    a.appendChild(span);
+    payBtn.appendChild(btnText);
 
-    a.addEventListener('click', (e) => {
+    payBtn.addEventListener('click', async (e) => {
       e.preventDefault();
-      if (!this.loading) {
-        this.loading = true;
+      if (this.loading) return;
+
+      this.loading = true;
+
+      if (this.config.HANDLE_UI) {
+        const icon = document.getElementById('eth-icon-svg');
+        icon.src = this.getImage('LOADING_ICON');
+      }
+
+      const price = await this.getEtherPriceIn(currency);
+      const amountIntETH = parseFloat(amount / price).toFixed(18);
+
+      console.log('amountIntETH: ', amountIntETH);
+
+      if (window.ethereum) window.web3 = new Web3(ethereum);
+
+      const amountToReceive = web3.utils.toWei(amountIntETH, 'ether');
+
+      try {
+        const response = await web3.currentProvider.send(
+          'eth_requestAccounts',
+          []
+        );
+
+        if (!response.result || !response.result.length) return;
+
+        const account = response.result[0];
+
+        try {
+          const tx = await this.sendTransaction(
+            account,
+            address,
+            amountToReceive
+          );
+
+          if (document.getElementById('eth-btn-text')) {
+            document.getElementById('eth-btn-text').classList.add('waiting');
+          }
+
+          if (this.config.HANDLE_UI) {
+            document.getElementById('eth-btn-text').textContent =
+              'Waiting for confirmation';
+            const waiting = document.createElement('p');
+            waiting.classList.add('eth-waiting');
+            waiting.id = 'hold-tight';
+            waiting.textContent = 'Hold tight! This might take a while...';
+            document.getElementById(targetElement).appendChild(waiting);
+          }
+
+          this.waitForConfirmation(
+            tx,
+            this.config.MIN_CONFIRMATIONS,
+            this.config.INTERVAL
+          );
+        } catch (e) {
+          console.error('Error sending transaction', e);
+
+          if (this.config.HANDLE_UI) {
+            document.getElementById('eth-icon-svg').src = this.getImage(
+              'ETHEREUM_ICON'
+            );
+            document.getElementById('eth-btn-text').textContent =
+              'Pay with Ethereum';
+          }
+
+          if (document.getElementById('eth-btn-text')) {
+            document.getElementById('eth-btn-text').classList.remove('waiting');
+          }
+
+          this.errorCallback(e);
+          this.loading = false;
+        }
+      } catch (e) {
+        console.error('Error', e);
+
         if (this.config.HANDLE_UI) {
           document.getElementById('eth-icon-svg').src = this.getImage(
-            'LOADING_ICON'
+            'ETHEREUM_ICON'
           );
+          document.getElementById('eth-btn-text').textContent =
+            'Pay with Ethereum';
         }
-        this.getEtherPriceIn(currency)
-          .then(async (price) => {
-            let amountIntETH = parseFloat(amount / price);
-            console.log('amountIntETH: ', amountIntETH);
-
-            if (window.ethereum) {
-              window.web3 = new Web3(ethereum);
-            }
-
-            const amountToReceive = web3.utils.toWei(
-              amountIntETH.toFixed(18).toString(),
-              'ether'
-            );
-
-            return web3.currentProvider
-              .send('eth_requestAccounts', [])
-              .then((response) => {
-                if (response.result && response.result.length) {
-                  const account = response.result[0];
-
-                  this.sendTransaction(account, address, amountToReceive)
-                    .then((tx) => {
-                      if (document.getElementById('eth-btn-text')) {
-                        document
-                          .getElementById('eth-btn-text')
-                          .classList.add('waiting');
-                      }
-
-                      if (this.config.HANDLE_UI) {
-                        document.getElementById('eth-btn-text').textContent =
-                          'Waiting for confirmation';
-                        const waiting = document.createElement('p');
-                        waiting.classList.add('eth-waiting');
-                        waiting.id = 'hold-tight';
-                        waiting.textContent =
-                          'Hold tight! This might take a while...';
-                        document
-                          .getElementById(targetElement)
-                          .appendChild(waiting);
-                      }
-                      this.waitForConfirmation(
-                        tx,
-                        this.config.MIN_CONFIRMATIONS,
-                        this.config.INTERVAL
-                      );
-                    })
-                    .catch((e) => {
-                      console.error('Error sending transaction', e);
-
-                      if (this.config.HANDLE_UI) {
-                        document.getElementById(
-                          'eth-icon-svg'
-                        ).src = this.getImage('ETHEREUM_ICON');
-                        document.getElementById('eth-btn-text').textContent =
-                          'Pay with Ethereum';
-                      }
-
-                      if (document.getElementById('eth-btn-text')) {
-                        document
-                          .getElementById('eth-btn-text')
-                          .classList.remove('waiting');
-                      }
-
-                      this.errorCallback(e);
-                      this.loading = false;
-                    });
-                }
-              });
-          })
-          .catch((e) => {
-            console.error('Error', e);
-            if (this.config.HANDLE_UI) {
-              document.getElementById('eth-icon-svg').src = this.getImage(
-                'ETHEREUM_ICON'
-              );
-              document.getElementById('eth-btn-text').textContent =
-                'Pay with Ethereum';
-            }
-            this.errorCallback(e);
-            this.loading = false;
-          });
+        this.errorCallback(e);
+        this.loading = false;
       }
     });
 
-    document.getElementById(targetElement).appendChild(a);
+    this.targetElement.appendChild(payBtn);
   }
 
   renderStyles() {
