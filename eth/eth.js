@@ -11,8 +11,7 @@ class EthCommerce {
   render(options, errorCallback, successCallback) {
     const targetElement = document.getElementById(options.targetElementId);
 
-    if (!targetElement)
-      return console.error('target element id is not defined');
+    if (!targetElement) return console.error('target element is undefined');
 
     if (window.ethereum) window.web3 = new Web3(ethereum);
 
@@ -23,7 +22,7 @@ class EthCommerce {
 
     window.addEventListener('load', () => {
       if (typeof web3 !== 'undefined') return this.renderButton();
-      if (this.config.HANDLE_UI) this.renderNoWeb3();
+      this.renderNoWeb3();
       this.errorCallback({ error: 'no web3 detected' });
     });
   }
@@ -34,8 +33,8 @@ class EthCommerce {
     downloadBtn.classList.add('eth-btn');
 
     const btnText = document.createElement('span');
-    btnText.id = 'eth-btn-text';
-    btnText.textContent = 'Install metamask';
+    btnText.className = 'eth-btn-text';
+    btnText.textContent = this.options.texts.install;
 
     downloadBtn.append(btnText);
 
@@ -57,7 +56,7 @@ class EthCommerce {
 
     this.btnText = document.createElement('span');
     this.btnText.className = 'eth-btn-text';
-    this.btnText.textContent = 'Pay with Ethereum';
+    this.btnText.textContent = this.options.texts.pay;
 
     this.payBtn.appendChild(this.btnText);
 
@@ -66,20 +65,15 @@ class EthCommerce {
       if (this.loading) return;
 
       this.loading = true;
-      this.btnText.textContent = 'Waiting...';
+      this.btnText.textContent = this.options.texts.loading;
 
       const price = await this.getEtherPriceIn(currency);
       const amountIntETH = parseFloat(amount / price).toFixed(18);
       const amountToReceive = web3.utils.toWei(amountIntETH, 'ether');
 
       try {
-        const response = await web3.currentProvider.send(
-          'eth_requestAccounts',
-          []
-        );
-
+        const response = await web3.currentProvider.send('eth_requestAccounts');
         if (!response.result || !response.result.length) return;
-
         const account = response.result[0];
 
         try {
@@ -91,11 +85,11 @@ class EthCommerce {
 
           this.btnText && this.btnText.classList.add('waiting');
 
-          this.btnText.textContent = 'Waiting for confirmation';
+          this.btnText.textContent = this.options.texts.waitConform;
           const waiting = document.createElement('p');
           waiting.classList.add('eth-waiting');
           waiting.id = 'hold-tight';
-          waiting.textContent = 'Hold tight! This might take a while...';
+          waiting.textContent = this.options.texts.waitHold;
           this.targetElement.appendChild(waiting);
 
           this.waitForConfirmation(
@@ -105,14 +99,14 @@ class EthCommerce {
           );
         } catch (e) {
           console.error('Error sending transaction', e);
-          this.btnText.textContent = 'Pay with Ethereum';
+          this.btnText.textContent = this.options.texts.pay;
           this.btnText && this.btnText.classList.remove('waiting');
           this.errorCallback(e);
           this.loading = false;
         }
       } catch (e) {
         console.error('Error', e);
-        this.btnText.textContent = 'Pay with Ethereum';
+        this.btnText.textContent = this.options.texts.pay;
         this.errorCallback(e);
         this.loading = false;
       }
@@ -128,7 +122,7 @@ class EthCommerce {
       hold.parentNode.removeChild(hold);
     }
 
-    this.btnText.textContent = 'Thank you!';
+    this.btnText.textContent = this.options.texts.success;
     this.successCallback(result);
   }
 
