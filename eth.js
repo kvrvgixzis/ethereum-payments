@@ -45,8 +45,6 @@ class EthCommerce {
   }
 
   renderNoWeb3() {
-    this.renderStyles();
-
     const downloadBtn = document.createElement('a');
     downloadBtn.href = 'https://metamask.io/download.html';
     downloadBtn.classList.add('eth-btn');
@@ -68,27 +66,20 @@ class EthCommerce {
   }
 
   renderButton() {
-    this.renderStyles();
-
     const { amount, address, currency } = this.options;
 
     const payBtn = document.createElement('a');
     payBtn.classList.add('eth-btn');
 
     if (this.config.HANDLE_UI) {
-      const iconWrapper = document.createElement('span');
-      iconWrapper.classList.add('eth-icon-wrapper');
-
       const icon = document.createElement('img');
       icon.src = this.getImage('ETHEREUM_ICON');
-      icon.id = 'eth-icon-svg';
-      iconWrapper.appendChild(icon);
-
-      payBtn.appendChild(iconWrapper);
+      icon.className = 'eth-icon-svg';
+      payBtn.appendChild(icon);
     }
 
     const btnText = document.createElement('span');
-    btnText.id = 'eth-btn-text';
+    btnText.className = 'eth-btn-text';
     btnText.textContent = 'Pay with Ethereum';
 
     payBtn.appendChild(btnText);
@@ -183,85 +174,6 @@ class EthCommerce {
     });
 
     this.targetElement.appendChild(payBtn);
-  }
-
-  renderStyles() {
-    const style = document.createElement('style');
-    style.innerHTML =
-      '.eth-btn {' +
-      'margin: 25px 0px;' +
-      'width: 80%;' +
-      'min-width: 220px;' +
-      'max-width: 220px;' +
-      'height: 42px;' +
-      'background-color: #fcfcfc;' +
-      'border-radius: 2px;' +
-      'box-shadow: 0 3px 4px 0 rgba(0, 0, 0, .2);' +
-      'cursor: pointer;' +
-      'cursor: hand;' +
-      'align-self: center;' +
-      'user-select: none;' +
-      'transition: all 400ms ease 0s;' +
-      'display: flex;' +
-      '}' +
-      '.eth-btn .eth-icon-wrapper {' +
-      'position: absolute;' +
-      'margin-top: 1px;' +
-      'margin-left: 1px;' +
-      'width: 40px;' +
-      'height: 40px;' +
-      'border-radius: 2px;' +
-      'user-select: none' +
-      '}' +
-      '.eth-btn #eth-icon-svg {' +
-      'position: absolute;' +
-      'margin-top: 11px;' +
-      'margin-left: 11px;' +
-      'width: 18px;' +
-      'height: 18px;' +
-      'user-select: none' +
-      '}' +
-      '.eth-btn #eth-btn-text {' +
-      'float: right;' +
-      'margin: 11px 14px 40px 40px;' +
-      'color: #757575;' +
-      'font-size: 15px;' +
-      'letter-spacing: .2px;' +
-      'font-family: Helvetica Neue, Arial;' +
-      'user-select: none' +
-      '}' +
-      '.eth-btn:hover {' +
-      'box-shadow: 0 3px 8px rgba(117, 117, 117, .5);' +
-      'user-select: none;' +
-      '}' +
-      '.eth-web3-missing-wrapper {' +
-      'min-width: 290px;' +
-      '}' +
-      '.eth-web3-missing {	' +
-      'font-size: 13px;' +
-      'color: #999;' +
-      'line-height: 20px;' +
-      'max-width: 320px;' +
-      'display: block' +
-      '}' +
-      '.eth-web3-missing a{	' +
-      'color: #FF0000;' +
-      '}' +
-      '.eth-waiting{	' +
-      'color: #999999;' +
-      'font-size: 13px;' +
-      'text-align:center;' +
-      '}' +
-      '.eth-btn:active {' +
-      'box-shadow: 0 1px 1px #757575;' +
-      'background: #F8F8F8;' +
-      'color: #fff;' +
-      'user-select: none;' +
-      '.';
-    ('}');
-
-    const ref = document.querySelector('script');
-    ref.parentNode.insertBefore(style, ref);
   }
 
   onTransactionConfirmed(result) {
