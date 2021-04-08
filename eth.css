@@ -1,5 +1,5 @@
 .eth-btn {
-  width: fit-content;
+  width: 220px;
   height: 42px;
 
   padding: 0 8px;
@@ -16,13 +16,6 @@
   align-items: center;
 }
 
-.eth-btn .eth-icon-svg {
-  width: 18px;
-  height: 18px;
-
-  margin-right: 8px;
-}
-
 .eth-btn .eth-btn-text {
   color: #757575;
   font-size: 15px;
@@ -32,22 +25,6 @@
 
 .eth-btn:hover {
   box-shadow: 0 3px 8px rgba(117, 117, 117, 0.5);
-}
-
-.eth-web3-missing-wrapper {
-  min-width: 290px;
-}
-
-.eth-web3-missing {
-  font-size: 13px;
-  color: #999;
-  line-height: 20px;
-  max-width: 320px;
-  display: block;
-}
-
-.eth-web3-missing a {
-  color: #ff0000;
 }
 
 .eth-waiting {
