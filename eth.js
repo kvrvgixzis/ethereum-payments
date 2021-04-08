@@ -12,7 +12,7 @@ class EthCommerce {
     this.config = {
       MIN_CONFIRMATIONS: 3,
       INTERVAL: 3,
-      GAS_BOOST: 25,
+      GAS_BOOST: 1,
       HANDLE_UI: true,
       ...config,
     };
@@ -91,7 +91,7 @@ class EthCommerce {
       this.loading = true;
 
       if (this.config.HANDLE_UI) {
-        const icon = document.getElementById('eth-icon-svg');
+        const icon = document.querySelector('.eth-icon-svg');
         icon.src = this.getImage('LOADING_ICON');
       }
 
@@ -223,34 +223,21 @@ class EthCommerce {
     }, interval * 1000);
   }
 
-  sendTransaction(account, address, amount) {
-    let tData = { from: account, to: address, value: amount };
+  async sendTransaction(account, address, amount) {
+    const tData = { from: account, to: address, value: amount };
+
     return new Promise((resolve, reject) => {
       web3.eth.estimateGas(tData, (error, gas) => {
-        if (!error) {
-          web3.eth.getGasPrice((error, gasPrice) => {
-            if (error) {
-              reject(error);
-            } else {
-              web3.eth.sendTransaction(
-                {
-                  ...tData,
-                  gas: gas,
-                  gasPrice: gasPrice * this.config.GAS_BOOST,
-                },
-                (error, txID) => {
-                  if (error) {
-                    reject(error);
-                  } else {
-                    resolve(txID);
-                  }
-                }
-              );
+        if (error) reject(error);
+        web3.eth.getGasPrice((error, gasPrice) => {
+          if (error) reject(error);
+          web3.eth.sendTransaction(
+            { ...tData, gas, gasPrice: gasPrice * this.config.GAS_BOOST },
+            (error, txID) => {
+              error ? reject(error) : resolve(txID);
             }
-          });
-        } else {
-          reject(error);
-        }
+          );
+        });
       });
     });
   }
