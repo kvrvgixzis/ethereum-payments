@@ -1,4 +1,4 @@
-class EthCommerce {
+class EthPaymentBtn {
   constructor(config) {
     this.config = {
       MIN_CONFIRMATIONS: 3,
