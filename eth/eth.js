@@ -8,6 +8,26 @@ class EthCommerce {
     };
   }
 
+  /**
+   * Render pay btn
+   * @param {{
+   *  targetElementId: string,
+   *  amount: number,
+   *  currency: string,
+   *  address: string,
+   *  texts: {
+   *   pay: string,
+   *   loading: string,
+   *   waitConfirm: string,
+   *   waitHold: string,
+   *   success: string,
+   *   install: string,
+   *  },
+   * }} options
+   * @param {function} errorCallback
+   * @param {function} successCallback
+   * @returns
+   */
   render(options, errorCallback, successCallback) {
     const targetElement = document.getElementById(options.targetElementId);
 
