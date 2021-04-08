@@ -1,4 +1,4 @@
-const ethCommerce = new EthCommerce();
+const ethPaymentBtn = new EthPaymentBtn();
 
 const texts = {
   pay: 'Pay with Ethereum',
@@ -20,4 +20,4 @@ const options = {
 const errorCallback = (e) => console.log('error callback', e);
 const successCallback = (tx) => console.log('success callback', tx);
 
-ethCommerce.render(options, errorCallback, successCallback);
+ethPaymentBtn.render(options, errorCallback, successCallback);
