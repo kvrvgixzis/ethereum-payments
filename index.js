@@ -2,7 +2,6 @@ const ethCommerce = new EthCommerce();
 
 const options = {
   targetElement: 'pay-button',
-  type: 'PAY',
   amount: 1,
   currency: 'USD',
   address: '0xfac01a7CefeA86BB9426F496b96E64C0FF78ea79',
