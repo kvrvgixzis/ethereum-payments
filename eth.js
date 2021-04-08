@@ -225,20 +225,18 @@ class EthCommerce {
 
   async sendTransaction(account, address, amount) {
     const tData = { from: account, to: address, value: amount };
+    const gas = await web3.eth.estimateGas(tData);
+    const gasPrice = await web3.eth.getGasPrice();
+
+    const tObject = {
+      ...tData,
+      gas,
+      gasPrice: gasPrice * this.config.GAS_BOOST,
+    };
 
     return new Promise((resolve, reject) => {
-      web3.eth.estimateGas(tData, (error, gas) => {
-        if (error) reject(error);
-        web3.eth.getGasPrice((error, gasPrice) => {
-          if (error) reject(error);
-          web3.eth.sendTransaction(
-            { ...tData, gas, gasPrice: gasPrice * this.config.GAS_BOOST },
-            (error, txID) => {
-              error ? reject(error) : resolve(txID);
-            }
-          );
-        });
-      });
+      const callback = (e, txID) => (e ? reject(e) : resolve(txID));
+      web3.eth.sendTransaction(tObject, callback);
     });
   }
 }
