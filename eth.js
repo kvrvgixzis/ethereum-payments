@@ -194,31 +194,24 @@ class EthCommerce {
   }
 
   waitForConfirmation(tx, minConfirmations, interval) {
-    let txBlockNumber = null,
-      confirmations = 0,
-      start_time = Date.now();
+    let txBlockNumber = null;
 
-    let checkConfirmations = setInterval((_) => {
+    const checkConfirmations = setInterval(() => {
       web3.eth.getTransaction(tx, (error, result) => {
-        if (!error) {
-          txBlockNumber = result.blockNumber;
-          if (txBlockNumber) {
-            web3.eth.getBlockNumber((error, currentBlockNumber) => {
-              if (!error) {
-                const confirmations = currentBlockNumber - txBlockNumber;
-                if (confirmations >= minConfirmations) {
-                  const delta = (Date.now() - start_time) / 1000;
-                  clearInterval(checkConfirmations);
-                  this.onTransactionConfirmed(result);
-                }
-              } else {
-                this.errorCallback(error);
-              }
-            });
-          }
-        } else {
-          this.errorCallback(error);
-        }
+        if (error) return this.errorCallback(error);
+
+        txBlockNumber = result.blockNumber;
+        if (!txBlockNumber) return;
+
+        web3.eth.getBlockNumber((error, currentBlockNumber) => {
+          if (error) return this.errorCallback(error);
+
+          const confirmations = currentBlockNumber - txBlockNumber;
+          if (confirmations < minConfirmations) return;
+
+          clearInterval(checkConfirmations);
+          this.onTransactionConfirmed(result);
+        });
       });
     }, interval * 1000);
   }
