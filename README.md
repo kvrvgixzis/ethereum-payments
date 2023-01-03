@@ -1,5 +1,7 @@
 # Get ethereum payments on your website
 
+https://kvrvgixzis.github.io/eth-payments/
+
 ## Installation
 
 ### 1. Put web3 at the end of the body tag
