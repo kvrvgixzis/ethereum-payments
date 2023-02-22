@@ -1,5 +1,7 @@
 # Get ethereum payments on your website
 
+## Example
+
 https://kvrvgixzis.github.io/ethereum-payments/
 
 ## Installation
